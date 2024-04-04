@@ -35,10 +35,14 @@ class Student
     #[ORM\OneToMany(targetEntity: CompletedTask::class, mappedBy: 'student')]
     private Collection $completedTasks;
 
+    #[ORM\OneToMany(targetEntity: UnlockedAchievement::class, mappedBy: 'student')]
+    private Collection $unlockedAchievements;
+
     public function __construct()
     {
         $this->subscriptions = new ArrayCollection();
         $this->completedTasks = new ArrayCollection();
+        $this->unlockedAchievements = new ArrayCollection();
     }
 
     /**
@@ -191,6 +195,37 @@ class Student
     public function removeCompletedTask(CompletedTask $completedTask): Student
     {
         $this->completedTasks->removeElement($completedTask);
+        return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getUnlockedAchievements(): Collection
+    {
+        return $this->unlockedAchievements;
+    }
+
+    /**
+     * @param UnlockedAchievement $unlockedAchievement
+     * @return $this
+     */
+    public function addUnlockedAchievement(UnlockedAchievement $unlockedAchievement): Student
+    {
+        if (!$this->unlockedAchievements->contains($unlockedAchievement)) {
+            $this->unlockedAchievements->add($unlockedAchievement);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param UnlockedAchievement $unlockedAchievement
+     * @return $this
+     */
+    public function removeUnlockedAchievement(UnlockedAchievement $unlockedAchievement): Student
+    {
+        $this->unlockedAchievements->removeElement($unlockedAchievement);
         return $this;
     }
 }

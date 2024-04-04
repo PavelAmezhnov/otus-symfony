@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Table(name: 'percentage')]
 #[ORM\Entity]
@@ -24,6 +25,7 @@ class Percentage
     private DateTime $updatedAt;
 
     #[ORM\Column(name: 'percent', type: 'float', nullable: false)]
+    #[Assert\Range(min: 0, max: 100)]
     private float $percent;
 
     #[ORM\ManyToOne(targetEntity: Task::class, inversedBy: 'percentages')]

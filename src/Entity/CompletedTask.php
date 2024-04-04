@@ -2,11 +2,13 @@
 
 namespace App\Entity;
 
+use App\Repository\CompletedTaskRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Table(name: 'completed_task')]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: CompletedTaskRepository::class)]
 #[ORM\Index(name: 'completed_task__student_id__ind', columns: ['student_id'])]
 #[ORM\Index(name: 'completed_task__task_id__ind', columns: ['task_id'])]
 #[ORM\HasLifecycleCallbacks]
@@ -24,8 +26,12 @@ class CompletedTask
     #[ORM\Column(name: 'updated_at', type: 'datetime', nullable: false)]
     private DateTime $updatedAt;
 
-    #[ORM\Column(name: 'grade', type: 'smallint', nullable: false)]
-    private int $grade;
+    #[ORM\Column(name: 'finished_at', type: 'datetime', nullable: true)]
+    private ?DateTime $finishedAt;
+
+    #[ORM\Column(name: 'grade', type: 'smallint', nullable: true)]
+    #[Assert\Range(min: 1, max: 10)]
+    private ?int $grade;
 
     #[ORM\ManyToOne(targetEntity: Student::class, inversedBy: 'completedTasks')]
     #[ORM\JoinColumn(name: 'student_id', referencedColumnName: 'id')]
@@ -91,9 +97,26 @@ class CompletedTask
     }
 
     /**
-     * @return int
+     * @return DateTime
      */
-    public function getGrade(): int
+    public function getFinishedAt(): DateTime
+    {
+        return $this->finishedAt;
+    }
+
+    /**
+     * @return CompletedTask
+     */
+    public function setFinishedAt(): CompletedTask
+    {
+        $this->finishedAt = new DateTime();
+        return $this;
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getGrade(): ?int
     {
         return $this->grade;
     }

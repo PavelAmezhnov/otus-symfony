@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
+use App\Repository\CourseRepository;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Table(name: 'course')]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: CourseRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 class Course
 {

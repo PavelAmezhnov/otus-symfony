@@ -30,7 +30,7 @@ class Task
 
     #[ORM\ManyToOne(targetEntity: Lesson::class, inversedBy: 'tasks')]
     #[ORM\JoinColumn(name: 'lesson_id', referencedColumnName: 'id')]
-    private Lesson $lesson;
+    private ?Lesson $lesson;
 
     #[ORM\OneToMany(targetEntity: Percentage::class, mappedBy: 'task')]
     private Collection $percentages;
@@ -194,6 +194,15 @@ class Task
     public function removeCompletedTask(CompletedTask $completedTask): Task
     {
         $this->completedTasks->removeElement($completedTask);
+        return $this;
+    }
+
+    /**
+     * @return Task
+     */
+    public function removeLesson(): Task
+    {
+        $this->lesson = null;
         return $this;
     }
 }

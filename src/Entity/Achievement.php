@@ -7,11 +7,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Table(name: 'lesson')]
+#[ORM\Table(name: 'achievement')]
 #[ORM\Entity]
-#[ORM\Index(name: 'lesson__course_id__ind', columns: ['course_id'])]
 #[ORM\HasLifecycleCallbacks]
-class Lesson
+class Achievement
 {
 
     #[ORM\Column(name: 'id', type: 'integer', unique: true)]
@@ -28,16 +27,12 @@ class Lesson
     #[ORM\Column(name: 'name', type: 'string', length: 128, nullable: false)]
     private string $name;
 
-    #[ORM\ManyToOne(targetEntity: Course::class, inversedBy: 'lessons')]
-    #[ORM\JoinColumn(name: 'course_id', referencedColumnName: 'id')]
-    private ?Course $course;
-
-    #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'lesson')]
-    private Collection $tasks;
+    #[ORM\OneToMany(targetEntity: UnlockedAchievement::class, mappedBy: 'achievement')]
+    private Collection $unlockedAchievements;
 
     public function __construct()
     {
-        $this->tasks = new ArrayCollection();
+        $this->unlockedAchievements = new ArrayCollection();
     }
 
     /**
@@ -50,9 +45,9 @@ class Lesson
 
     /**
      * @param int|null $id
-     * @return Lesson
+     * @return Achievement
      */
-    public function setId(?int $id): Lesson
+    public function setId(?int $id): Achievement
     {
         $this->id = $id;
         return $this;
@@ -67,12 +62,12 @@ class Lesson
     }
 
     /**
-     * @return Lesson
+     * @return Achievement
      */
     #[ORM\PrePersist]
-    public function setCreatedAt(): Lesson
+    public function setCreatedAt(): Achievement
     {
-        $this->createdAt = new DateTime();;
+        $this->createdAt = new DateTime();
         return $this;
     }
 
@@ -85,13 +80,13 @@ class Lesson
     }
 
     /**
-     * @return Lesson
+     * @return Achievement
      */
     #[ORM\PrePersist]
     #[ORM\PreUpdate]
-    public function setUpdatedAt(): Lesson
+    public function setUpdatedAt(): Achievement
     {
-        $this->updatedAt = new DateTime();;
+        $this->updatedAt = new DateTime();
         return $this;
     }
 
@@ -105,69 +100,42 @@ class Lesson
 
     /**
      * @param string $name
-     * @return Lesson
+     * @return Achievement
      */
-    public function setName(string $name): Lesson
+    public function setName(string $name): Achievement
     {
         $this->name = $name;
         return $this;
     }
 
     /**
-     * @return Course
-     */
-    public function getCourse(): Course
-    {
-        return $this->course;
-    }
-
-    /**
-     * @param Course $course
-     * @return Lesson
-     */
-    public function setCourse(Course $course): Lesson
-    {
-        $this->course = $course;
-        return $this;
-    }
-
-    /**
      * @return Collection
      */
-    public function getTasks(): Collection
+    public function getUnlockedAchievements(): Collection
     {
-        return $this->tasks;
+        return $this->unlockedAchievements;
     }
 
     /**
-     * @param Task $task
-     * @return Lesson
+     * @param UnlockedAchievement $unlockedAchievement
+     * @return $this
      */
-    public function addTask(Task $task): Lesson
+    public function addUnlockedAchievement(UnlockedAchievement $unlockedAchievement): Achievement
     {
-        if (!$this->tasks->contains($task)) {
-            $this->tasks->add($task);
+        if (!$this->unlockedAchievements->contains($unlockedAchievement)) {
+            $this->unlockedAchievements->add($unlockedAchievement);
         }
 
         return $this;
     }
 
     /**
-     * @param Task $task
-     * @return Lesson
+     * @param UnlockedAchievement $unlockedAchievement
+     * @return $this
      */
-    public function removeTask(Task $task): Lesson
+    public function removeUnlockedAchievement(UnlockedAchievement $unlockedAchievement): Achievement
     {
-        $this->tasks->removeElement($task);
-        return $this;
-    }
-
-    /**
-     * @return Lesson
-     */
-    public function removeCourse(): Lesson
-    {
-        $this->course = null;
+        $this->unlockedAchievements->removeElement($unlockedAchievement);
         return $this;
     }
 }

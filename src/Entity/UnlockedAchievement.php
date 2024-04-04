@@ -7,6 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Table(name: 'unlocked_achievement')]
 #[ORM\Entity]
+#[ORM\Index(name: 'unlocked_achievement__student_id__ind', columns: ['student_id'])]
+#[ORM\Index(name: 'unlocked_achievement__achievement_id__ind', columns: ['achievement_id'])]
 #[ORM\HasLifecycleCallbacks]
 class UnlockedAchievement
 {

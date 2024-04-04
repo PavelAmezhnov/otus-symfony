@@ -11,6 +11,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: CompletedTaskRepository::class)]
 #[ORM\Index(name: 'completed_task__student_id__ind', columns: ['student_id'])]
 #[ORM\Index(name: 'completed_task__task_id__ind', columns: ['task_id'])]
+#[ORM\Index(name: 'completed_task__grade__ind', columns: ['grade'])]
 #[ORM\HasLifecycleCallbacks]
 class CompletedTask
 {

@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
+use App\Repository\TaskRepository;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Table(name: 'task')]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: TaskRepository::class)]
 #[ORM\Index(name: 'task__lesson_id__ind', columns: ['lesson_id'])]
 #[ORM\HasLifecycleCallbacks]
 class Task

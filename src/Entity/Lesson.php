@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
+use App\Repository\LessonRepository;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Table(name: 'lesson')]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: LessonRepository::class)]
 #[ORM\Index(name: 'lesson__course_id__ind', columns: ['course_id'])]
 #[ORM\HasLifecycleCallbacks]
 class Lesson

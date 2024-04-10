@@ -2,13 +2,15 @@
 
 namespace App\Entity;
 
+use App\Repository\StudentRepository;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Table(name: 'student')]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: StudentRepository::class)]
+#[ORM\Index(name: 'student__last_name__first_name__ind', columns: ['last_name', 'first_name'])]
 #[ORM\HasLifecycleCallbacks]
 class Student
 {

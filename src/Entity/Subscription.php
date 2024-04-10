@@ -2,11 +2,12 @@
 
 namespace App\Entity;
 
+use App\Repository\SubscriptionRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Table(name: 'subscription')]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
 #[ORM\Index(name: 'subscription__student_id__ind', columns: ['student_id'])]
 #[ORM\Index(name: 'subscription__course_id__ind', columns: ['course_id'])]
 #[ORM\HasLifecycleCallbacks]

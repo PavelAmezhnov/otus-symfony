@@ -174,4 +174,24 @@ class Course
         $this->lessons->removeElement($lesson);
         return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'name' => $this->getName(),
+            'lessons' => array_map(
+                static fn(Lesson $l) => [
+                    'id' => $l->getId(),
+                    'name' =>  $l->getName()
+                ],
+                $this->getLessons()->toArray()
+            )
+        ];
+    }
 }

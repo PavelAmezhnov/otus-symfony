@@ -123,4 +123,18 @@ class Subscription
         $this->course = $course;
         return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'student' => $this->getStudent()->toArray(),
+            'course' => $this->getCourse()->toArray()
+        ];
+    }
 }

@@ -145,4 +145,19 @@ class Percentage
         $this->skill = $skill;
         return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'task' => $this->getTask()->toArray(),
+            'skill' => $this->getSkill()->toArray(),
+            'percent' => $this->getPercent()
+        ];
+    }
 }

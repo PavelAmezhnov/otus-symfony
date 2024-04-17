@@ -7,6 +7,7 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
 
 #[ORM\Table(name: 'task')]
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
@@ -31,7 +32,7 @@ class Task
 
     #[ORM\ManyToOne(targetEntity: Lesson::class, inversedBy: 'tasks')]
     #[ORM\JoinColumn(name: 'lesson_id', referencedColumnName: 'id')]
-    private ?Lesson $lesson;
+    private ?Lesson $lesson = null;
 
     #[ORM\OneToMany(targetEntity: Percentage::class, mappedBy: 'task')]
     private Collection $percentages;
@@ -147,10 +148,24 @@ class Task
     /**
      * @param Percentage $percentage
      * @return Task
+     * @throws Exception
      */
     public function addPercentage(Percentage $percentage): Task
     {
         if (!$this->percentages->contains($percentage)) {
+            $percents = 0;
+            /** @var Percentage $p */
+            foreach ($this->percentages as $p) {
+                $percents += $p->getPercent();
+            }
+
+            if ($percents + $percentage->getPercent() > 100) {
+                throw new Exception(sprintf(
+                    'Доля добавляемого навыка не может превышать %s%%',
+                    100 - $percents
+                ));
+            }
+
             $this->percentages->add($percentage);
         }
 
@@ -205,5 +220,27 @@ class Task
     {
         $this->lesson = null;
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'name' => $this->getName(),
+            'lesson' => $this->getLesson()->toArray(),
+            'skills' => array_map(
+                static fn(Percentage $p) => [
+                    'id' => $p->getSkill()->getId(),
+                    'name' => $p->getSkill()->getName(),
+                    'percent' => $p->getPercent()
+                ],
+                $this->getPercentages()->toArray()
+            )
+        ];
     }
 }

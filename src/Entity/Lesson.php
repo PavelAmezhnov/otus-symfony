@@ -31,7 +31,7 @@ class Lesson
 
     #[ORM\ManyToOne(targetEntity: Course::class, inversedBy: 'lessons')]
     #[ORM\JoinColumn(name: 'course_id', referencedColumnName: 'id')]
-    private ?Course $course;
+    private ?Course $course = null;
 
     #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'lesson')]
     private Collection $tasks;
@@ -170,5 +170,26 @@ class Lesson
     {
         $this->course = null;
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'name' => $this->getName(),
+            'course' => $this->getCourse()->toArray(),
+            'tasks' => array_map(
+                static fn(Task $t) => [
+                    'id' => $t->getId(),
+                    'name' => $t->getName()
+                ],
+                $this->getTasks()->toArray()
+            )
+        ];
     }
 }

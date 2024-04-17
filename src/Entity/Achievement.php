@@ -139,4 +139,25 @@ class Achievement
         $this->unlockedAchievements->removeElement($unlockedAchievement);
         return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'name' => $this->getName(),
+            'unlockedByStudents' => array_map(
+                static fn(UnlockedAchievement $ua) => [
+                    'id' => $ua->getStudent()->getId(),
+                    'firstName' => $ua->getStudent()->getFirstName(),
+                    'lastName' => $ua->getStudent()->getLastName(),
+                ],
+                $this->getUnlockedAchievements()->toArray()
+            )
+        ];
+    }
 }

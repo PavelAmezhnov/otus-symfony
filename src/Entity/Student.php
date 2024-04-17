@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'student')]
 #[ORM\Entity(repositoryClass: StudentRepository::class)]
 #[ORM\Index(name: 'student__last_name__first_name__ind', columns: ['last_name', 'first_name'])]
+#[ORM\Index(name: 'student__first_name__last_name__ind', columns: ['first_name', 'last_name'])]
 #[ORM\HasLifecycleCallbacks]
 class Student
 {
@@ -29,7 +30,7 @@ class Student
     private string $firstName;
 
     #[ORM\Column(name: 'last_name', type: 'string', length: 64, nullable: true)]
-    private ?string $lastName;
+    private ?string $lastName = null;
 
     #[ORM\OneToMany(targetEntity: Subscription::class, mappedBy: 'student')]
     private Collection $subscriptions;
@@ -229,5 +230,34 @@ class Student
     {
         $this->unlockedAchievements->removeElement($unlockedAchievement);
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'firstName' => $this->getFirstName(),
+            'lastName' => $this->getLastName(),
+            'courses' => array_map(
+                static fn(Subscription $s) => [
+                    'id' => $s->getCourse()->getId(),
+                    'name' => $s->getCourse()->getName()
+                ],
+                $this->getSubscriptions()->toArray()
+            ),
+            'unlockedAchievements' => array_map(
+                static fn(UnlockedAchievement $ua) => [
+                    'id' => $ua->getAchievement()->getId(),
+                    'createdAt' => $ua->getCreatedAt(),
+                    'name' => $ua->getAchievement()->getName()
+                ],
+                $this->getUnlockedAchievements()->toArray()
+            )
+        ];
     }
 }

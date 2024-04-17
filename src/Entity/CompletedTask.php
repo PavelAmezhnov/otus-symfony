@@ -28,11 +28,11 @@ class CompletedTask
     private DateTime $updatedAt;
 
     #[ORM\Column(name: 'finished_at', type: 'datetime', nullable: true)]
-    private ?DateTime $finishedAt;
+    private ?DateTime $finishedAt = null;
 
     #[ORM\Column(name: 'grade', type: 'smallint', nullable: true)]
     #[Assert\Range(min: 1, max: 10)]
-    private ?int $grade;
+    private ?int $grade = null;
 
     #[ORM\ManyToOne(targetEntity: Student::class, inversedBy: 'completedTasks')]
     #[ORM\JoinColumn(name: 'student_id', referencedColumnName: 'id')]
@@ -98,9 +98,9 @@ class CompletedTask
     }
 
     /**
-     * @return DateTime
+     * @return DateTime|null
      */
-    public function getFinishedAt(): DateTime
+    public function getFinishedAt(): ?DateTime
     {
         return $this->finishedAt;
     }
@@ -166,5 +166,21 @@ class CompletedTask
     {
         $this->task = $task;
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'finishedAt' => $this->getFinishedAt(),
+            'grade' => $this->getGrade(),
+            'student' => $this->getStudent()->toArray(),
+            'task' => $this->getTask()->toArray()
+        ];
     }
 }

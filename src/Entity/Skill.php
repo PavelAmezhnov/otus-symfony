@@ -139,4 +139,17 @@ class Skill
         $this->percentages->removeElement($percentage);
         return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'name' => $this->getName()
+        ];
+    }
 }

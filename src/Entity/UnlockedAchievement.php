@@ -122,4 +122,18 @@ class UnlockedAchievement
         $this->achievement = $achievement;
         return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'student' => $this->getStudent()->toArray(),
+            'achievement' => $this->getAchievement()->toArray()
+        ];
+    }
 }

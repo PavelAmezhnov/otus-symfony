@@ -1,0 +1,197 @@
+###
+POST http://127.0.0.1:7777/student/create
+Content-Type: application/json
+
+{
+    "firstName": "Petr",
+    "lastName": "Petrov"
+}
+
+###
+POST http://127.0.0.1:7777/course/create
+Content-Type: application/json
+
+{
+    "name": "Symfony Framework"
+}
+
+###
+POST http://127.0.0.1:7777/lesson/create
+Content-Type: application/json
+
+{
+    "courseId": 1,
+	"name": "Вводное занятие и выбор проектной работы"
+}
+
+###
+POST http://127.0.0.1:7777/task/create
+Content-Type: application/json
+
+{
+	"lessonId": 1,
+	"name": "Выбор проектной работы"
+}
+
+###
+POST http://127.0.0.1:7777/skill/create
+Content-Type: application/json
+
+{
+	"name": "Doctrine"
+}
+
+###
+POST http://127.0.0.1:7777/achievement/create
+Content-Type: application/json
+
+{
+	"name": "Все задания в занятии выполнены на 10 баллов"
+}
+
+###
+POST http://127.0.0.1:7777/subscription/subscribe
+Content-Type: application/json
+
+{
+	"studentId": 3,
+    "courseId": 1
+}
+
+###
+POST http://127.0.0.1:7777/unlocked-achievement/unlock
+Content-Type: application/json
+
+{
+	"studentId": 3,
+	"achievementId": 1
+}
+
+###
+POST http://127.0.0.1:7777/completed-task/create
+Content-Type: application/json
+
+{
+	"studentId": 3,
+	"taskId": 1
+}
+
+###
+POST http://127.0.0.1:7777/completed-task/rate
+Content-Type: application/json
+
+{
+	"completedTaskId": 3,
+	"rate": 7
+}
+
+###
+POST http://127.0.0.1:7777/percentage/create
+Content-Type: application/json
+
+{
+	"taskId": 1,
+    "skillId": 1,
+    "percent": 25.0
+}
+
+###
+POST http://127.0.0.1:7777/lesson/change-course
+Content-Type: application/json
+
+{
+	"lessonId": 1,
+	"courseId": 4
+}
+
+###
+POST http://127.0.0.1:7777/task/change-lesson
+Content-Type: application/json
+
+{
+	"taskId": 1,
+	"lessonId": 2
+}
+
+###
+POST http://127.0.0.1:7777/achievement/get-sorted-by-rarity-achievement-list
+Content-Type: application/json
+
+{}
+
+###
+POST http://127.0.0.1:7777/achievement/get-count-students-with-achievement-in-percentage
+Content-Type: application/json
+
+{
+    "achievementId": 1
+}
+
+###
+POST http://127.0.0.1:7777/completed-task/get-total-grade-for-course
+Content-Type: application/json
+
+{
+	"courseId": 1,
+    "studentId": 3
+}
+
+###
+POST http://127.0.0.1:7777/completed-task/get-total-grade-for-lesson
+Content-Type: application/json
+
+{
+	"lessonId": 2,
+	"studentId": 3
+}
+
+###
+POST http://127.0.0.1:7777/completed-task/get-total-grade-for-skill
+Content-Type: application/json
+
+{
+	"skillId": 1,
+	"studentId": 3
+}
+
+###
+POST http://127.0.0.1:7777/completed-task/get-total-grade-in-time-range
+Content-Type: application/json
+
+{
+	"startDate": "2024-04-01",
+    "endDate": "2024-04-30",
+	"studentId": 3
+}
+
+###
+POST http://127.0.0.1:7777/course/get-subscribed-students
+Content-Type: application/json
+
+{
+	"courseId": 1
+}
+
+###
+POST http://127.0.0.1:7777/task/get-tasks-with-specific-skill
+Content-Type: application/json
+
+{
+	"skillId": 1
+}
+
+###
+POST http://127.0.0.1:7777/student/get-achievements
+Content-Type: application/json
+
+{
+	"studentId": 3
+}
+
+###
+POST http://127.0.0.1:7777/student/find-by-name
+Content-Type: application/json
+
+{
+	"name": "Petr Petrov"
+}

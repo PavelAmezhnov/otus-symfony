@@ -27,28 +27,6 @@ class TaskManager
         return $task;
     }
 
-    /**
-     * @throws Exception
-     */
-    public function addPercentage(Task $task, Percentage $percentage): Task
-    {
-        $percents = 0;
-        /** @var Percentage $p */
-        foreach ($task->getPercentages() as $p) {
-            $percents += $p->getPercent();
-        }
-
-        if ($percents + $percentage->getPercent() > 100) {
-            throw new Exception();
-        }
-
-        $task->addPercentage($percentage);
-        $percentage->setTask($task);
-        $this->entityManager->flush();
-
-        return $task;
-    }
-
     public function changeLesson(Task $task, Lesson $lesson): Task
     {
         $task->getLesson()->removeTask($task);

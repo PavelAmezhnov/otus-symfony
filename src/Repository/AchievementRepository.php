@@ -33,6 +33,6 @@ class AchievementRepository extends ServiceEntityRepositoryProxy
 
         return $countStudents === 0
             ? 0.0
-            : round($countUnlockedAchievements / $countStudents, 1, PHP_ROUND_HALF_DOWN);
+            : round(100 * ($countUnlockedAchievements / $countStudents), 1, PHP_ROUND_HALF_DOWN);
     }
 }

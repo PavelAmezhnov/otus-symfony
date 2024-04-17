@@ -26,4 +26,13 @@ class CompletedTaskManager
 
         return $completedTask;
     }
+
+    public function rate(CompletedTask $completedTask, int $grade): CompletedTask
+    {
+        $completedTask->setGrade($grade);
+        $completedTask->setFinishedAt();
+        $this->entityManager->flush();
+
+        return $completedTask;
+    }
 }

@@ -11,22 +11,20 @@ use Exception;
 class PercentageManager
 {
 
-    public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly TaskManager $taskManager
-    ) {
+    public function __construct(private readonly EntityManagerInterface $entityManager)
+    {
     }
 
     /**
      * @throws Exception
      */
-    public function create(Task $task, Skill $skill, int $percent): Percentage
+    public function create(Task $task, Skill $skill, float $percent): Percentage
     {
         $percentage = (new Percentage())
             ->setTask($task)
             ->setSkill($skill)
             ->setPercent($percent);
-        $this->taskManager->addPercentage($task, $percentage);
+        $task->addPercentage($percentage);
         $skill->addPercentage($percentage);
         $this->entityManager->persist($percentage);
         $this->entityManager->flush();

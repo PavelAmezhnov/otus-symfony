@@ -1,0 +1,292 @@
+###- achievement
+
+###
+POST http://127.0.0.1:7777/api/v1/achievement
+Content-Type: application/json
+
+{
+	"name": "Все задания в занятии выполнены на 10 баллов"
+}
+
+###
+GET http://127.0.0.1:7777/api/v1/achievement?page=1&perPage=10
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/achievement/1
+Content-Type: application/json
+
+###
+PATCH http://127.0.0.1:7777/api/v1/achievement
+Content-Type: application/json
+
+{
+	"id": 5,
+	"name": "Все задания в занятии выполнены на 10 баллов!!!"
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/achievement/1
+Content-Type: application/json
+
+###- completed task
+
+###
+POST http://127.0.0.1:7777/api/v1/completed-task
+Content-Type: application/json
+
+{
+	"studentId": 3,
+    "taskId": 2,
+    "grade": 7
+}
+
+###
+PATCH http://127.0.0.1:7777/api/v1/completed-task
+Content-Type: application/json
+
+{
+	"id": 12,
+	"grade": 9
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/completed-task/6
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/completed-task?page=1&perPage=10&courseId=4&studentId=1
+Content-Type: application/json
+
+###- course
+
+###
+POST http://127.0.0.1:7777/api/v1/course
+Content-Type: application/json
+
+{
+	"name": "Symfony Framework!!!"
+}
+
+###
+PATCH http://127.0.0.1:7777/api/v1/course
+Content-Type: application/json
+
+{
+	"id": 10,
+	"name": "Symfony Framework Symfony Framework"
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/course/5
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/course?page=1&perPage=10&name=Symfony
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/course/10
+Content-Type: application/json
+
+###- lesson
+
+###
+POST http://127.0.0.1:7777/api/v1/lesson
+Content-Type: application/json
+
+{
+	"courseId": 1,
+	"name": "Вводное занятие и выбор проектной работы!!!"
+}
+
+###
+PATCH http://127.0.0.1:7777/api/v1/lesson
+Content-Type: application/json
+
+{
+	"id": 5,
+	"name": "Вводное занятие и выбор проектной работы!",
+    "courseId": 4
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/lesson/5
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/lesson?page=1&perPage=10&name=Вводное
+Content-Type: application/json
+
+###- percentage
+
+###
+POST http://127.0.0.1:7777/api/v1/percentage
+Content-Type: application/json
+
+{
+	"taskId": 2,
+    "skillId": 4,
+    "percent": 10
+}
+
+###
+PATCH http://127.0.0.1:7777/api/v1/percentage
+Content-Type: application/json
+
+{
+	"id": 7,
+	"percent": 90
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/percentage/3
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/percentage?page=1&perPage=10&taskId=2
+Content-Type: application/json
+
+###- skill
+
+###
+POST http://127.0.0.1:7777/api/v1/skill
+Content-Type: application/json
+
+{
+	"name": "AMQP111"
+}
+
+###
+PATCH http://127.0.0.1:7777/api/v1/skill
+Content-Type: application/json
+
+{
+	"id": 5,
+	"name": "AMQP!"
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/skill/3
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/skill?page=1&perPage=10
+Content-Type: application/json
+
+###- student
+
+###
+POST http://127.0.0.1:7777/api/v1/student
+Content-Type: application/json
+
+{
+	"firstName": "Petrov"
+}
+
+###
+GET http://127.0.0.1:7777/api/v1/student?page=1&perPage=10&name=Petrov
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/student/1
+Content-Type: application/json
+
+###
+PATCH http://127.0.0.1:7777/api/v1/student
+Content-Type: application/json
+
+{
+	"id": 22,
+	"firstName": "Ivan",
+	"lastName": "Petr"
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/student/2
+Content-Type: application/json
+
+###- subscription
+
+###
+POST http://127.0.0.1:7777/api/v1/subscription
+Content-Type: application/json
+
+{
+	"studentId": 1,
+    "courseId": 4
+}
+
+###
+PATCH http://127.0.0.1:7777/api/v1/subscription
+Content-Type: application/json
+
+{
+	"id": 6,
+    "studentId": 1
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/subscription/5
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/subscription?page=1&perPage=10&studentId=1&courseId=1
+Content-Type: application/json
+
+###- task
+
+###
+POST http://127.0.0.1:7777/api/v1/task
+Content-Type: application/json
+
+{
+	"lessonId": 1,
+	"name": "Выбор проектной работы!"
+}
+
+###
+PATCH http://127.0.0.1:7777/api/v1/task
+Content-Type: application/json
+
+{
+	"id": 5,
+    "name": "Выбор проектной работы!!!",
+    "lessonId": 2
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/task/5
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/task?page=1&perPage=10&skillId=1
+Content-Type: application/json
+
+###- unlocked achievement
+
+###
+POST http://127.0.0.1:7777/api/v1/unlocked-achievement
+Content-Type: application/json
+
+{
+	"studentId": 1,
+    "achievementId": 7
+}
+
+###
+PATCH http://127.0.0.1:7777/api/v1/unlocked-achievement
+Content-Type: application/json
+
+{
+	"id": 4,
+	"studentId": 3
+}
+
+###
+DELETE http://127.0.0.1:7777/api/v1/unlocked-achievement/4
+Content-Type: application/json
+
+###
+GET http://127.0.0.1:7777/api/v1/unlocked-achievement?page=1&perPage=10&studentId=3
+Content-Type: application/json

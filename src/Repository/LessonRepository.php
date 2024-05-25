@@ -2,27 +2,35 @@
 
 namespace App\Repository;
 
+use App\Collection\EntityCollection;
+use App\Controller\Api\v1\Lesson\Input\ReadData;
 use App\Entity\Lesson;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
-use Doctrine\Common\Collections\AbstractLazyCollection;
-use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\Order;
-use Doctrine\Common\Collections\Selectable;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 class LessonRepository extends ServiceEntityRepositoryProxy
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private readonly EntityManagerInterface $entityManager
+    ) {
         parent::__construct($registry, Lesson::class);
     }
 
-    public function findByName(string $name): AbstractLazyCollection&Selectable
+    public function getLessons(ReadData $dto): EntityCollection
     {
-        $criteria = Criteria::create()
-            ->andWhere(Criteria::expr()->contains('name', $name))
-            ->orderBy(['name' => Order::Ascending]);
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('l')
+            ->from(Lesson::class, 'l')
+            ->orderBy('l.id', 'ASC')
+            ->setFirstResult($dto->perPage * ($dto->page - 1))
+            ->setMaxResults($dto->perPage);
 
-        return $this->matching($criteria);
+        if ($dto->name !== null) {
+            $qb->andWhere($qb->expr()->like('l.name', ':name'))->setParameter('name', "$dto->name%");
+        }
+
+        return new EntityCollection($qb->getQuery()->getResult());
     }
 }

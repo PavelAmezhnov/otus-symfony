@@ -2,44 +2,57 @@
 
 namespace App\Repository;
 
+use App\Collection\EntityCollection;
+use App\Controller\Api\v1\Course\Input\ReadData;
 use App\Entity\Course;
 use App\Entity\Subscription;
+use App\Exception\EntityNotFoundException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
-use Doctrine\Common\Collections\AbstractLazyCollection;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\Order;
-use Doctrine\Common\Collections\Selectable;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 class CourseRepository extends ServiceEntityRepositoryProxy
 {
 
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private readonly EntityManagerInterface $entityManager
+    ) {
         parent::__construct($registry, Course::class);
     }
 
-    public function findByName(string $name): AbstractLazyCollection&Selectable
+    public function read(ReadData $dto): EntityCollection
     {
-        $criteria = Criteria::create()
-            ->andWhere(Criteria::expr()->contains('name', $name))
-            ->orderBy(['name' => Order::Ascending]);
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('c')
+            ->from(Course::class, 'c')
+            ->orderBy('c.id', 'ASC')
+            ->setFirstResult($dto->perPage * ($dto->page - 1))
+            ->setMaxResults($dto->perPage);
 
-        return $this->matching($criteria);
-    }
-
-    public function getSubscribedStudents(Course $course): Collection
-    {
-        $subscriptions = $course->getSubscriptions();
-        $students = new ArrayCollection();
-
-        /** @var Subscription $s */
-        foreach ($subscriptions->toArray() as $s) {
-            $students->add($s->getStudent());
+        if ($dto->name !== null) {
+            $qb->andWhere($qb->expr()->like('c.name', ':name'))->setParameter('name', "$dto->name%");
         }
 
-        return $students;
+        return new EntityCollection($qb->getQuery()->getResult());
+    }
+
+    /**
+     * @throws EntityNotFoundException
+     */
+    public function readById(int $id): array
+    {
+        $course = $this->find($id);
+        if ($course === null) {
+            throw new EntityNotFoundException('Course not found');
+        }
+
+        $result = $course->toArray();
+        $result['students'] = array_map(
+            static fn(Subscription $s) => $s->getStudent()->toArray(),
+            $course->getSubscriptions()->toArray()
+        );
+
+        return $result;
     }
 }

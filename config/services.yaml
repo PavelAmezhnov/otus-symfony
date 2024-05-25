@@ -26,3 +26,11 @@ services:
     App\Doctrine\MigrationEventSubscriber:
         tags:
             - { name: doctrine.event_subscriber, connection: default }
+
+    App\EventListener\KernelViewEventListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.view }
+
+    App\EventListener\KernelExceptionEventListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }

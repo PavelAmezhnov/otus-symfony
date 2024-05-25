@@ -2,37 +2,62 @@
 
 namespace App\Repository;
 
+use App\Collection\EntityCollection;
+use App\Controller\Api\v1\Achievement\Input\ReadData;
+use App\Controller\Api\v1\Achievement\Input\SortEnum;
 use App\Entity\Achievement;
 use App\Entity\Student;
+use App\Exception\EntityNotFoundException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
 class AchievementRepository extends ServiceEntityRepositoryProxy
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private readonly EntityManagerInterface $entityManager
+    ) {
         parent::__construct($registry, Achievement::class);
     }
 
-    public function getSortedByRarityAchievementList(): array
+    /**
+     * @throws EntityNotFoundException
+     */
+    public function getAchievements(ReadData $data): EntityCollection
     {
-        $achievements = $this->findAll();
-        usort(
-            $achievements,
-            static fn(Achievement $a, Achievement $b) =>
-                $a->getUnlockedAchievements()->count() <=> $b->getUnlockedAchievements()->count()
-        );
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('a')
+            ->from(Achievement::class, 'a')
+            ->setFirstResult($data->perPage * ($data->page - 1))
+            ->setMaxResults($data->perPage);
 
-        return $achievements;
-    }
+        if ($data->name !== null) {
+            $qb->andWhere($qb->expr()->like('a.name', ':name'))->setParameter('name', "$data->name%");
+        }
 
-    public function getCountStudentsWithAchievementInPercentage(Achievement $achievement): float
-    {
-        $countUnlockedAchievements = $achievement->getUnlockedAchievements()->count();
-        $countStudents = count($this->getEntityManager()->getRepository(Student::class)->findAll());
+        if ($data->studentId !== null) {
+            $student = $this->entityManager->getRepository(Student::class)->find($data->studentId);
+            if ($student === null) {
+                throw new EntityNotFoundException('Student not found');
+            }
 
-        return $countStudents === 0
-            ? 0.0
-            : round(100 * ($countUnlockedAchievements / $countStudents), 1, PHP_ROUND_HALF_DOWN);
+            $qb->innerJoin('a.unlockedAchievements', 'ua_0')
+                ->andWhere($qb->expr()->eq('ua_0.student', ':student'))
+                ->setParameter('student', $data->studentId);
+        }
+
+        switch ($data->sort) {
+            case SortEnum::RARITY:
+                $qb->leftJoin('a.unlockedAchievements', 'ua_1')
+                    ->groupBy('a.id')
+                    ->addOrderBy('COUNT(ua_1.id)', 'ASC')
+                    ->addOrderBy('a.name', 'ASC');
+                break;
+            case SortEnum::DEFAULT:
+                $qb->orderBy('a.name', 'ASC');
+        }
+
+        return new EntityCollection($qb->getQuery()->getResult());
     }
 }

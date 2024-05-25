@@ -13,7 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'student__last_name__first_name__ind', columns: ['last_name', 'first_name'])]
 #[ORM\Index(name: 'student__first_name__last_name__ind', columns: ['first_name', 'last_name'])]
 #[ORM\HasLifecycleCallbacks]
-class Student
+class Student implements HasArrayRepresentation
 {
     #[ORM\Column(name: 'id', type: 'integer', unique: true)]
     #[ORM\Id]
@@ -32,13 +32,13 @@ class Student
     #[ORM\Column(name: 'last_name', type: 'string', length: 64, nullable: true)]
     private ?string $lastName = null;
 
-    #[ORM\OneToMany(targetEntity: Subscription::class, mappedBy: 'student')]
+    #[ORM\OneToMany(targetEntity: Subscription::class, mappedBy: 'student', cascade: ['remove'])]
     private Collection $subscriptions;
 
-    #[ORM\OneToMany(targetEntity: CompletedTask::class, mappedBy: 'student')]
+    #[ORM\OneToMany(targetEntity: CompletedTask::class, mappedBy: 'student', cascade: ['remove'])]
     private Collection $completedTasks;
 
-    #[ORM\OneToMany(targetEntity: UnlockedAchievement::class, mappedBy: 'student')]
+    #[ORM\OneToMany(targetEntity: UnlockedAchievement::class, mappedBy: 'student', cascade: ['remove'])]
     private Collection $unlockedAchievements;
 
     public function __construct()

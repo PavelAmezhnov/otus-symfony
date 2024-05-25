@@ -5,13 +5,15 @@ namespace App\Entity;
 use App\Repository\SubscriptionRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\UniqueConstraint;
 
 #[ORM\Table(name: 'subscription')]
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
 #[ORM\Index(name: 'subscription__student_id__ind', columns: ['student_id'])]
 #[ORM\Index(name: 'subscription__course_id__ind', columns: ['course_id'])]
+#[UniqueConstraint(name: 'subscription__student__course__uniq', fields: ['student', 'course'])]
 #[ORM\HasLifecycleCallbacks]
-class Subscription
+class Subscription implements HasArrayRepresentation
 {
 
     #[ORM\Column(name: 'id', type: 'integer', unique: true)]

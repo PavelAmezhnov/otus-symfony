@@ -5,14 +5,17 @@ namespace App\Entity;
 use App\Repository\PercentageRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\UniqueConstraint;
+use Exception;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Table(name: 'percentage')]
 #[ORM\Entity(repositoryClass: PercentageRepository::class)]
 #[ORM\Index(name: 'percentage__task_id__ind', columns: ['task_id'])]
 #[ORM\Index(name: 'percentage__skill_id__ind', columns: ['skill_id'])]
+#[UniqueConstraint(name: 'percentage__task__skill__uniq', fields: ['task', 'skill'])]
 #[ORM\HasLifecycleCallbacks]
-class Percentage
+class Percentage implements HasArrayRepresentation
 {
     #[ORM\Column(name: 'id', type: 'integer', unique: true)]
     #[ORM\Id]
@@ -103,10 +106,29 @@ class Percentage
     /**
      * @param float $percent
      * @return Percentage
+     * @throws Exception
      */
     public function setPercent(float $percent): Percentage
     {
+        $percentTotal = 0;
+        $task = $this->getTask();
+
+        /** @var Percentage $p */
+        foreach ($task->getPercentages() as $p) {
+            if ($p === $this) {
+                continue;
+            }
+            $percentTotal += $p->getPercent();
+        }
+
+        if ($percentTotal + $percent > 100) {
+            throw new Exception(sprintf(
+                'Доля добавляемого навыка не может превышать %s%%',
+                100 - $percentTotal
+            ));
+        }
         $this->percent = $percent;
+
         return $this;
     }
 

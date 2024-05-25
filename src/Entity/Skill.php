@@ -7,11 +7,13 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\UniqueConstraint;
 
 #[ORM\Table(name: 'skill')]
 #[ORM\Entity(repositoryClass: SkillRepository::class)]
+#[UniqueConstraint(name: 'skill__name__uniq', fields: ['name'])]
 #[ORM\HasLifecycleCallbacks]
-class Skill
+class Skill implements HasArrayRepresentation
 {
 
     #[ORM\Column(name: 'id', type: 'integer', unique: true)]
@@ -28,7 +30,7 @@ class Skill
     #[ORM\Column(name: 'name', type: 'string', length: 128, nullable: false)]
     private string $name;
 
-    #[ORM\OneToMany(targetEntity: Percentage::class, mappedBy: 'skill')]
+    #[ORM\OneToMany(targetEntity: Percentage::class, mappedBy: 'skill', cascade: ['remove'])]
     private Collection $percentages;
 
     public function __construct()

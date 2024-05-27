@@ -38,7 +38,7 @@ class AchievementController extends AbstractController
     }
 
     /**
-     * @throws EntityNotFoundException
+     * @throws EntityNotFoundException|BadRequestException
      */
     #[Route(path: '', methods: ['GET'])]
     public function read(#[MapQueryString] ReadData $dto): EntityCollection

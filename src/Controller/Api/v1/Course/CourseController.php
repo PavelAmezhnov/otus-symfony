@@ -54,6 +54,9 @@ class CourseController extends AbstractController
         return $this->courseManager->delete($id);
     }
 
+    /**
+     * @throws BadRequestException
+     */
     #[Route(path: '', methods: ['GET'])]
     public function read(#[MapQueryString] ReadData $dto): EntityCollection
     {

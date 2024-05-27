@@ -7,6 +7,7 @@ use App\Controller\Api\v1\Student\Input\CreateData;
 use App\Controller\Api\v1\Student\Input\ReadData;
 use App\Controller\Api\v1\Student\Input\UpdateData;
 use App\Entity\Student;
+use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use App\Manager\StudentManager;
 use App\Repository\StudentRepository;
@@ -33,6 +34,7 @@ class StudentController extends AbstractController
 
     /**
      * @throws EntityNotFoundException
+     * @throws BadRequestException
      */
     #[Route(path: '', methods: ['GET'])]
     public function read(#[MapQueryString] ReadData $dto): EntityCollection

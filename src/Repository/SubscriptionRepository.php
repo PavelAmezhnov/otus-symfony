@@ -7,6 +7,7 @@ use App\Controller\Api\v1\Subscription\Input\ReadData;
 use App\Entity\Course;
 use App\Entity\Student;
 use App\Entity\Subscription;
+use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,6 +15,9 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class SubscriptionRepository extends ServiceEntityRepositoryProxy
 {
+
+    use LimitTrait;
+
     public function __construct(
         ManagerRegistry $registry,
         private readonly EntityManagerInterface $entityManager
@@ -23,15 +27,16 @@ class SubscriptionRepository extends ServiceEntityRepositoryProxy
 
     /**
      * @throws EntityNotFoundException
+     * @throws BadRequestException
      */
     public function getSubscriptions(ReadData $dto): EntityCollection
     {
         $qb = $this->entityManager->createQueryBuilder();
         $qb->select('s')
             ->from(Subscription::class, 's')
-            ->orderBy('s.id', 'ASC')
-            ->setFirstResult($dto->perPage * ($dto->page - 1))
-            ->setMaxResults($dto->perPage);
+            ->orderBy('s.id', 'ASC');
+        $this->setLimit($dto, $qb);
+        $this->setOffset($dto, $qb);
 
         if ($dto->studentId !== null) {
             $student = $this->entityManager->getRepository(Student::class)->find($dto->studentId);

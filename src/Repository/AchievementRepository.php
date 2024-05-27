@@ -7,6 +7,7 @@ use App\Controller\Api\v1\Achievement\Input\ReadData;
 use App\Controller\Api\v1\Achievement\Input\SortEnum;
 use App\Entity\Achievement;
 use App\Entity\Student;
+use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,6 +15,9 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class AchievementRepository extends ServiceEntityRepositoryProxy
 {
+
+    use LimitTrait;
+
     public function __construct(
         ManagerRegistry $registry,
         private readonly EntityManagerInterface $entityManager
@@ -23,14 +27,14 @@ class AchievementRepository extends ServiceEntityRepositoryProxy
 
     /**
      * @throws EntityNotFoundException
+     * @throws BadRequestException
      */
     public function getAchievements(ReadData $data): EntityCollection
     {
         $qb = $this->entityManager->createQueryBuilder();
-        $qb->select('a')
-            ->from(Achievement::class, 'a')
-            ->setFirstResult($data->perPage * ($data->page - 1))
-            ->setMaxResults($data->perPage);
+        $qb->select('a')->from(Achievement::class, 'a');
+        $this->setLimit($data, $qb);
+        $this->setOffset($data, $qb);
 
         if ($data->name !== null) {
             $qb->andWhere($qb->expr()->like('a.name', ':name'))->setParameter('name', "$data->name%");

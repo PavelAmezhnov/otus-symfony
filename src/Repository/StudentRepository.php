@@ -6,7 +6,7 @@ use App\Collection\EntityCollection;
 use App\Controller\Api\v1\Student\Input\ReadData;
 use App\Entity\Course;
 use App\Entity\Student;
-use App\Entity\UnlockedAchievement;
+use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,6 +14,9 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class StudentRepository extends ServiceEntityRepositoryProxy
 {
+
+    use LimitTrait;
+
     public function __construct(
         ManagerRegistry $registry,
         private readonly EntityManagerInterface $entityManager
@@ -23,15 +26,16 @@ class StudentRepository extends ServiceEntityRepositoryProxy
 
     /**
      * @throws EntityNotFoundException
+     * @throws BadRequestException
      */
     public function getStudents(ReadData $data): EntityCollection
     {
         $qb = $this->entityManager->createQueryBuilder();
         $qb->select('s')
             ->from(Student::class, 's')
-            ->orderBy('s.id', 'ASC')
-            ->setFirstResult($data->perPage * ($data->page - 1))
-            ->setMaxResults($data->perPage);
+            ->orderBy('s.id', 'ASC');
+        $this->setLimit($data, $qb);
+        $this->setOffset($data, $qb);
 
         if ($data->name !== null) {
             $qb->andWhere(

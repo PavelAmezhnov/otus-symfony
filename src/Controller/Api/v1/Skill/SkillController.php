@@ -54,6 +54,9 @@ class SkillController extends AbstractController
         return $this->skillManager->delete($id);
     }
 
+    /**
+     * @throws BadRequestException
+     */
     #[Route(path: '', methods: ['GET'])]
     public function read(#[MapQueryString] ReadData $dto): EntityCollection
     {

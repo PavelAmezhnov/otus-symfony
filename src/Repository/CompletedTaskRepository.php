@@ -7,6 +7,7 @@ use App\Controller\Api\v1\CompletedTask\Input\ReadData;
 use App\Entity\CompletedTask;
 use App\Entity\Student;
 use App\Entity\Task;
+use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
 use Doctrine\Common\Collections\Criteria;
@@ -15,6 +16,8 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class CompletedTaskRepository extends ServiceEntityRepositoryProxy
 {
+
+    use LimitTrait;
 
     public function __construct(
         ManagerRegistry $registry,
@@ -25,12 +28,13 @@ class CompletedTaskRepository extends ServiceEntityRepositoryProxy
 
     /**
      * @throws EntityNotFoundException
+     * @throws BadRequestException
      */
     public function read(ReadData $dto): EntityCollection
     {
-        $criteria = Criteria::create()
-            ->setFirstResult($dto->perPage * ($dto->page - 1))
-            ->setMaxResults($dto->perPage);
+        $criteria = Criteria::create();
+        $this->setLimit($dto, $criteria);
+        $this->setOffset($dto, $criteria);
 
         if ($dto->studentId !== null) {
             $student = $this->entityManager->getRepository(Student::class)->find($dto->studentId);

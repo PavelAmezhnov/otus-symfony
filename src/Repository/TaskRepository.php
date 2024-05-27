@@ -7,6 +7,7 @@ use App\Controller\Api\v1\Task\Input\ReadData;
 use App\Entity\Lesson;
 use App\Entity\Skill;
 use App\Entity\Task;
+use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,6 +15,9 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class TaskRepository extends ServiceEntityRepositoryProxy
 {
+
+    use LimitTrait;
+
     public function __construct(
         ManagerRegistry $registry,
         private readonly EntityManagerInterface $entityManager
@@ -23,15 +27,16 @@ class TaskRepository extends ServiceEntityRepositoryProxy
 
     /**
      * @throws EntityNotFoundException
+     * @throws BadRequestException
      */
     public function getTasks(ReadData $dto): EntityCollection
     {
         $qb = $this->entityManager->createQueryBuilder();
         $qb->select('t')
             ->from(Task::class, 't')
-            ->orderBy('t.name', 'ASC')
-            ->setFirstResult($dto->perPage * ($dto->page - 1))
-            ->setMaxResults($dto->perPage);
+            ->orderBy('t.name', 'ASC');
+        $this->setLimit($dto, $qb);
+        $this->setOffset($dto, $qb);
 
         if ($dto->name !== null) {
             $qb->andWhere($qb->expr()->like('t.name', ':name'))->setParameter('name', "$dto->name%");

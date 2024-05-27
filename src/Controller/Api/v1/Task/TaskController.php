@@ -57,6 +57,7 @@ class TaskController extends AbstractController
 
     /**
      * @throws EntityNotFoundException
+     * @throws BadRequestException
      */
     #[Route(path: '', methods: ['GET'])]
     public function read(#[MapQueryString] ReadData $dto): EntityCollection

@@ -7,6 +7,7 @@ use App\Controller\Api\v1\UnlockedAchievement\Input\ReadData;
 use App\Entity\Achievement;
 use App\Entity\Student;
 use App\Entity\UnlockedAchievement;
+use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryProxy;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,6 +15,9 @@ use Doctrine\Persistence\ManagerRegistry;
 
 class UnlockedAchievementRepository extends ServiceEntityRepositoryProxy
 {
+
+    use LimitTrait;
+
     public function __construct(
         ManagerRegistry $registry,
         private readonly EntityManagerInterface $entityManager
@@ -23,6 +27,7 @@ class UnlockedAchievementRepository extends ServiceEntityRepositoryProxy
 
     /**
      * @throws EntityNotFoundException
+     * @throws BadRequestException
      */
     public function read(ReadData $dto): EntityCollection
     {
@@ -31,9 +36,9 @@ class UnlockedAchievementRepository extends ServiceEntityRepositoryProxy
             ->from(UnlockedAchievement::class, 'ua')
             ->innerJoin('ua.student', 's')
             ->innerJoin('ua.achievement', 'a')
-            ->orderBy('ua.id', 'ASC')
-            ->setFirstResult($dto->perPage * ($dto->page - 1))
-            ->setMaxResults($dto->perPage);
+            ->orderBy('ua.id', 'ASC');
+        $this->setLimit($dto, $qb);
+        $this->setOffset($dto, $qb);
 
         if ($dto->studentId !== null) {
             $student = $this->entityManager->getRepository(Student::class)->find($dto->studentId);

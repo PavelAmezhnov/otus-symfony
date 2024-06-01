@@ -7,13 +7,15 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\UniqueConstraint;
 use Exception;
 
 #[ORM\Table(name: 'task')]
 #[ORM\Entity(repositoryClass: TaskRepository::class)]
 #[ORM\Index(name: 'task__lesson_id__ind', columns: ['lesson_id'])]
+#[UniqueConstraint(name: 'task__name__lesson__uniq', fields: ['name', 'lesson'])]
 #[ORM\HasLifecycleCallbacks]
-class Task
+class Task implements HasArrayRepresentation
 {
 
     #[ORM\Column(name: 'id', type: 'integer', unique: true)]
@@ -34,10 +36,10 @@ class Task
     #[ORM\JoinColumn(name: 'lesson_id', referencedColumnName: 'id')]
     private ?Lesson $lesson = null;
 
-    #[ORM\OneToMany(targetEntity: Percentage::class, mappedBy: 'task')]
+    #[ORM\OneToMany(targetEntity: Percentage::class, mappedBy: 'task', cascade: ['remove'])]
     private Collection $percentages;
 
-    #[ORM\OneToMany(targetEntity: CompletedTask::class, mappedBy: 'task')]
+    #[ORM\OneToMany(targetEntity: CompletedTask::class, mappedBy: 'task', cascade: ['remove'])]
     private Collection $completedTasks;
 
     public function __construct()

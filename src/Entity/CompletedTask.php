@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\CompletedTaskRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\UniqueConstraint;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Table(name: 'completed_task')]
@@ -12,8 +13,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Index(name: 'completed_task__student_id__ind', columns: ['student_id'])]
 #[ORM\Index(name: 'completed_task__task_id__ind', columns: ['task_id'])]
 #[ORM\Index(name: 'completed_task__grade__ind', columns: ['grade'])]
+#[UniqueConstraint(name: 'completed_task__student__task__uniq', fields: ['student', 'task'])]
 #[ORM\HasLifecycleCallbacks]
-class CompletedTask
+class CompletedTask implements HasArrayRepresentation
 {
 
     #[ORM\Column(name: 'id', type: 'integer', unique: true)]

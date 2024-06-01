@@ -7,11 +7,13 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\UniqueConstraint;
 
 #[ORM\Table(name: 'achievement')]
 #[ORM\Entity(repositoryClass: AchievementRepository::class)]
+#[UniqueConstraint(name: 'achievement__name__uniq', fields: ['name'])]
 #[ORM\HasLifecycleCallbacks]
-class Achievement
+class Achievement implements HasArrayRepresentation
 {
 
     #[ORM\Column(name: 'id', type: 'integer', unique: true)]
@@ -28,7 +30,7 @@ class Achievement
     #[ORM\Column(name: 'name', type: 'string', length: 128, nullable: false)]
     private string $name;
 
-    #[ORM\OneToMany(targetEntity: UnlockedAchievement::class, mappedBy: 'achievement')]
+    #[ORM\OneToMany(targetEntity: UnlockedAchievement::class, mappedBy: 'achievement', cascade: ['remove'])]
     private Collection $unlockedAchievements;
 
     public function __construct()

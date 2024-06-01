@@ -7,12 +7,14 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\UniqueConstraint;
 
 #[ORM\Table(name: 'lesson')]
 #[ORM\Entity(repositoryClass: LessonRepository::class)]
 #[ORM\Index(name: 'lesson__course_id__ind', columns: ['course_id'])]
+#[UniqueConstraint(name: 'lesson__name__course__uniq', fields: ['name', 'course'])]
 #[ORM\HasLifecycleCallbacks]
-class Lesson
+class Lesson implements HasArrayRepresentation
 {
 
     #[ORM\Column(name: 'id', type: 'integer', unique: true)]
@@ -33,7 +35,7 @@ class Lesson
     #[ORM\JoinColumn(name: 'course_id', referencedColumnName: 'id')]
     private ?Course $course = null;
 
-    #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'lesson')]
+    #[ORM\OneToMany(targetEntity: Task::class, mappedBy: 'lesson', cascade: ['remove'])]
     private Collection $tasks;
 
     public function __construct()
@@ -73,7 +75,7 @@ class Lesson
     #[ORM\PrePersist]
     public function setCreatedAt(): Lesson
     {
-        $this->createdAt = new DateTime();;
+        $this->createdAt = new DateTime();
         return $this;
     }
 
@@ -92,7 +94,7 @@ class Lesson
     #[ORM\PreUpdate]
     public function setUpdatedAt(): Lesson
     {
-        $this->updatedAt = new DateTime();;
+        $this->updatedAt = new DateTime();
         return $this;
     }
 

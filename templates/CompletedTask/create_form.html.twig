@@ -1,0 +1,13 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+<div style="width:50%; margin-left:10px; margin-top:10px">
+    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    {{ form_errors(form) }}
+    {{ form_row(form.student) }}
+    {{ form_row(form.task) }}
+    {{ form_row(form.grade) }}
+    {{ form_row(form.submit) }}
+    {{ form_end(form, {'render_rest': false}) }}
+</div>
+{% endblock %}

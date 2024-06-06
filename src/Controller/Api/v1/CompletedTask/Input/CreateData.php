@@ -18,4 +18,13 @@ class CreateData
     ) {
 
     }
+
+    public static function fromFormData(array $data): self
+    {
+        return new self(
+            studentId: $data['student']->getId(),
+            taskId: $data['task']->getid(),
+            grade: $data['grade']
+        );
+    }
 }

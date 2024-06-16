@@ -13,4 +13,11 @@ class CreateData
     ) {
 
     }
+
+    public static function fromFormData(array $data): self
+    {
+        return new self(
+            name: $data['name']
+        );
+    }
 }

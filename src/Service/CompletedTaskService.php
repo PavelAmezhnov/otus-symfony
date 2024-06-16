@@ -211,4 +211,17 @@ class CompletedTaskService
 
         return $totalGrade;
     }
+
+    /**
+     * @throws EntityNotFoundException
+     */
+    public function readById(int $id): array
+    {
+        $completedTask = $this->entityManager->getRepository(CompletedTask::class)->find($id);
+        if ($completedTask === null) {
+            throw new EntityNotFoundException('Completed task not found');
+        }
+
+        return $completedTask->toArray();
+    }
 }

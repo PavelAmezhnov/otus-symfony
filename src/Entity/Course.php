@@ -33,12 +33,16 @@ class Course implements HasArrayRepresentation
     #[ORM\OneToMany(targetEntity: Subscription::class, mappedBy: 'course', cascade: ['remove'])]
     private Collection $subscriptions;
 
+    #[ORM\OneToMany(targetEntity: CuratedCourse::class, mappedBy: 'course', cascade: ['remove'])]
+    private Collection $curatedCourses;
+
     #[ORM\OneToMany(targetEntity: Lesson::class, mappedBy: 'course', cascade: ['remove'])]
     private Collection $lessons;
 
     public function __construct()
     {
         $this->subscriptions = new ArrayCollection();
+        $this->curatedCourses = new ArrayCollection();
         $this->lessons = new ArrayCollection();
     }
 
@@ -143,6 +147,37 @@ class Course implements HasArrayRepresentation
     public function removeSubscription(Subscription $subscription): Course
     {
         $this->subscriptions->removeElement($subscription);
+        return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getCuratedCourses(): Collection
+    {
+        return $this->curatedCourses;
+    }
+
+    /**
+     * @param CuratedCourse $curatedCourse
+     * @return $this
+     */
+    public function addCuratedCourse(CuratedCourse $curatedCourse): Course
+    {
+        if (!$this->curatedCourses->contains($curatedCourse)) {
+            $this->curatedCourses->add($curatedCourse);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param CuratedCourse $curatedCourse
+     * @return $this
+     */
+    public function removeCuratedCourse(CuratedCourse $curatedCourse): Course
+    {
+        $this->subscriptions->removeElement($curatedCourse);
         return $this;
     }
 

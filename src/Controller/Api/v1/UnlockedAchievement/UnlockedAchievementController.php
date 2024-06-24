@@ -9,6 +9,7 @@ use App\Controller\Api\v1\UnlockedAchievement\Input\UpdateData;
 use App\Entity\UnlockedAchievement;
 use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
+use App\Manager\StaffManager;
 use App\Manager\UnlockedAchievementManager;
 use App\Repository\UnlockedAchievementRepository;
 use Exception;
@@ -34,6 +35,7 @@ class UnlockedAchievementController extends AbstractController
     #[Route(path: '', methods: ['POST'])]
     public function create(#[MapRequestPayload] CreateData $dto): UnlockedAchievement
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_ADMIN);
         return $this->unlockedAchievementManager->give($dto);
     }
 
@@ -43,6 +45,7 @@ class UnlockedAchievementController extends AbstractController
     #[Route(path: '', methods: ['PATCH'])]
     public function update(#[MapRequestPayload] UpdateData $dto): UnlockedAchievement
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_ADMIN);
         return $this->unlockedAchievementManager->update($dto);
     }
 
@@ -52,6 +55,7 @@ class UnlockedAchievementController extends AbstractController
     #[Route(path: '/{id}', requirements: ['id' => '\d+'], methods: ['DELETE'])]
     public function delete(int $id)
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_ADMIN);
         return $this->unlockedAchievementManager->delete($id);
     }
 

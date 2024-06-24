@@ -12,6 +12,7 @@ use App\Exception\EntityNotFoundException;
 use App\Form\Type\Achievement\CreateType;
 use App\Form\Type\Achievement\UpdateType;
 use App\Manager\AchievementManager;
+use App\Manager\StaffManager;
 use App\Repository\AchievementRepository;
 use App\Service\AchievementService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -43,6 +44,7 @@ class AchievementController extends AbstractController
     #[Route(path: '', methods: ['POST'])]
     public function create(#[MapRequestPayload] CreateData $dto): Achievement
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_STAFF);
         return $this->achievementManager->create($dto);
     }
 
@@ -90,6 +92,7 @@ class AchievementController extends AbstractController
     #[Route(path: '', methods: ['PATCH'])]
     public function update(#[MapRequestPayload] UpdateData $dto): Achievement
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_STAFF);
         return $this->achievementManager->update($dto);
     }
 
@@ -126,6 +129,7 @@ class AchievementController extends AbstractController
     #[Route(path: '/{id}', requirements: ['id' => '\d+'], methods: ['DELETE'])]
     public function delete(int $id)
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_ADMIN);
         return $this->achievementManager->delete($id);
     }
 }

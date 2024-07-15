@@ -3,9 +3,7 @@
 namespace App\Service;
 
 use App\Entity\User;
-use App\Manager\UserManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTEncodeFailureException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -16,7 +14,6 @@ class AuthService
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly UserPasswordHasherInterface $userPasswordHasher,
-        private readonly UserManager $userManager,
         private readonly JWTEncoderInterface $jwtEncoder,
         private readonly int $tokenTTL
     ) {
@@ -32,14 +29,6 @@ class AuthService
         }
 
         return $this->userPasswordHasher->isPasswordValid($user, $password);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function getToken(string $login): ?string
-    {
-        return $this->userManager->updateToken($login);
     }
 
     /**

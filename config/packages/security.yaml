@@ -25,9 +25,6 @@ security:
             lazy: true
             provider: app_user_provider
             stateless: true
-            # api token
-#            custom_authenticator: App\Security\ApiTokenAuthenticator
-            # jwt token
             custom_authenticator: App\Security\JWTTokenAuthenticator
             access_denied_handler: App\Security\AccessDeniedHandler
 

@@ -14,26 +14,12 @@ use Symfony\Component\Routing\Attribute\Route;
 class TokenController extends AbstractController
 {
 
-    public function __construct(private readonly AuthService $authService)
-    {
-    }
-
     /**
      * @throws Exception
      */
     #[Route(path: '', methods: ['POST'])]
-    public function getTokenAction(Request $request): JsonResponse
+    public function getTokenAction(): JsonResponse
     {
-        $user = $request->getUser();
-        $password = $request->getPassword();
-        if (!$user || !$password) {
-            return new JsonResponse(['message' => 'Authorization required'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        if (!$this->authService->isCredentialsValid($user, $password)) {
-            return new JsonResponse(['message' => 'Invalid password or username'], Response::HTTP_FORBIDDEN);
-        }
-
-        return new JsonResponse(['token' => $this->authService->getToken($user)]);
+        return new JsonResponse(['message' => "Method's deprecated"], Response::HTTP_GONE);
     }
 }

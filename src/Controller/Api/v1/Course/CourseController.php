@@ -10,6 +10,7 @@ use App\Entity\Course;
 use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use App\Manager\CourseManager;
+use App\Manager\StaffManager;
 use App\Repository\CourseRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
@@ -33,6 +34,7 @@ class CourseController extends AbstractController
     #[Route(path: '', methods: ['POST'])]
     public function create(#[MapRequestPayload] CreateData $dto): Course
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_STAFF);
         return $this->courseManager->create($dto);
     }
 
@@ -42,6 +44,7 @@ class CourseController extends AbstractController
     #[Route(path: '', methods: ['PATCH'])]
     public function update(#[MapRequestPayload] UpdateData $dto): Course
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_STAFF);
         return $this->courseManager->update($dto);
     }
 
@@ -51,6 +54,7 @@ class CourseController extends AbstractController
     #[Route(path: '/{id}', requirements: ['id' => '\d+'], methods: ['DELETE'])]
     public function delete(int $id)
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_ADMIN);
         return $this->courseManager->delete($id);
     }
 

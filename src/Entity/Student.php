@@ -7,11 +7,14 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\UniqueConstraint;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Table(name: 'student')]
 #[ORM\Entity(repositoryClass: StudentRepository::class)]
 #[ORM\Index(name: 'student__last_name__first_name__ind', columns: ['last_name', 'first_name'])]
 #[ORM\Index(name: 'student__first_name__last_name__ind', columns: ['first_name', 'last_name'])]
+#[UniqueConstraint(name: 'student__user__uniq', fields: ['user'])]
 #[ORM\HasLifecycleCallbacks]
 class Student implements HasArrayRepresentation
 {
@@ -40,6 +43,9 @@ class Student implements HasArrayRepresentation
 
     #[ORM\OneToMany(targetEntity: UnlockedAchievement::class, mappedBy: 'student', cascade: ['remove'])]
     private Collection $unlockedAchievements;
+
+    #[ORM\OneToOne(targetEntity: User::class, cascade: ['remove'])]
+    private User $user;
 
     public function __construct()
     {
@@ -229,6 +235,24 @@ class Student implements HasArrayRepresentation
     public function removeUnlockedAchievement(UnlockedAchievement $unlockedAchievement): Student
     {
         $this->unlockedAchievements->removeElement($unlockedAchievement);
+        return $this;
+    }
+
+    /**
+     * @return User
+     */
+    public function getUser(): User
+    {
+        return $this->user;
+    }
+
+    /**
+     * @param User $user
+     * @return Student
+     */
+    public function setUser(UserInterface $user): Student
+    {
+        $this->user = $user;
         return $this;
     }
 

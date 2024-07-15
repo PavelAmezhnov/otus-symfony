@@ -7,11 +7,13 @@ use App\Controller\Api\v1\CompletedTask\Input\CreateData;
 use App\Controller\Api\v1\CompletedTask\Input\ReadData;
 use App\Controller\Api\v1\CompletedTask\Input\UpdateData;
 use App\Entity\CompletedTask;
+use App\Exception\AccessDeniedException;
 use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use App\Form\Type\CompletedTask\CreateType;
 use App\Form\Type\CompletedTask\UpdateType;
 use App\Manager\CompletedTaskManager;
+use App\Manager\StaffManager;
 use App\Repository\CompletedTaskRepository;
 use App\Service\CompletedTaskService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,6 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Throwable;
 
 #[Route(path: '/api/v1/completed-task')]
@@ -42,9 +45,9 @@ class CompletedTaskController extends AbstractController
      * @throws Throwable
      */
     #[Route(path: '', methods: ['POST'])]
-    public function create(#[MapRequestPayload] CreateData $dto): CompletedTask
+    public function create(#[MapRequestPayload] CreateData $dto, UserInterface $user): CompletedTask
     {
-        return $this->completedTaskManager->create($dto);
+        return $this->completedTaskService->create($dto, $user);
     }
 
     #[Route(path: '/create', methods: ['GET', 'POST'])]
@@ -70,11 +73,12 @@ class CompletedTaskController extends AbstractController
 
     /**
      * @throws EntityNotFoundException
+     * @throws AccessDeniedException
      */
     #[Route(path: '', methods: ['PATCH'])]
-    public function update(#[MapRequestPayload] UpdateData $dto): CompletedTask
+    public function update(#[MapRequestPayload] UpdateData $dto, UserInterface $user): CompletedTask
     {
-        return $this->completedTaskManager->update($dto);
+        return $this->completedTaskService->update($dto, $user);
     }
 
     #[Route(path: '/update/{id}', requirements: ['id' => '\d+'], methods: ['GET', 'PATCH'])]
@@ -110,24 +114,28 @@ class CompletedTaskController extends AbstractController
     #[Route(path: '/{id}', requirements: ['id' => '\d+'], methods: ['DELETE'])]
     public function delete(int $id)
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_ADMIN);
         return $this->completedTaskManager->delete($id);
     }
 
     /**
-     * @throws EntityNotFoundException|BadRequestException
+     * @throws EntityNotFoundException
+     * @throws BadRequestException
+     * @throws AccessDeniedException
      */
     #[Route(path: '', methods: ['GET'])]
-    public function read(#[MapQueryString] ReadData $dto): int|float|EntityCollection
+    public function read(#[MapQueryString] ReadData $dto, UserInterface $user): int|float|EntityCollection
     {
-        return $this->completedTaskService->read($dto);
+        return $this->completedTaskService->read($dto, $user);
     }
 
     /**
      * @throws EntityNotFoundException
+     * @throws AccessDeniedException
      */
     #[Route(path: '/{id}', name: 'view', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function readById(int $id): array
+    public function readById(int $id, UserInterface $user): array
     {
-        return $this->completedTaskService->readById($id);
+        return $this->completedTaskService->readById($id, $user);
     }
 }

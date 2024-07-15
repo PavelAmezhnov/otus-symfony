@@ -1,0 +1,101 @@
+###- user
+
+###
+POST http://127.0.0.1:7777/api/v1/user
+Content-Type: application/json
+
+{
+	"login": "p.ivanov",
+    "password": "12345678"
+}
+
+###- token
+
+###
+POST http://127.0.0.1:7777/api/v1/token
+Authorization: Basic aS5pdmFub3Y6MTIzNDU2Nzg=
+Content-Type: application/json
+
+{
+}
+
+###
+POST http://127.0.0.1:7777/api/v2/token
+Authorization: Basic aS5wZXRyb3Y6MTIzNDU2Nzg=
+Content-Type: application/json
+
+{
+}
+
+###- student
+
+###
+POST http://127.0.0.1:7777/api/v1/student
+Authorization: Bearer MujQOFWnYOwtW6F2McyqHPn1z4g=
+Content-Type: application/json
+
+{
+	"userLogin": "p.ivanov",
+	"firstName": "Petr",
+	"lastName": "Ivanov"
+}
+
+###
+GET http://127.0.0.1:7777/api/v1/student?page=1&perPage=10
+Authorization: Bearer Ht1M8Yq1+x7J4/2t1GdWFOWWXvw=
+Content-Type: application/json
+
+###- teacher
+
+###
+POST http://127.0.0.1:7777/api/v1/teacher
+Content-Type: application/json
+
+{
+	"userLogin": "i.petrov",
+	"firstName": "Ivan",
+	"lastName": "Petrov"
+}
+
+
+###- staff
+
+###
+POST http://127.0.0.1:7777/api/v1/staff
+Authorization: Bearer Ht1M8Yq1+x7J4/2t1GdWFOWWXvw=
+Content-Type: application/json
+
+{
+	"userLogin": "i.ivanov",
+	"firstName": "Ivan",
+	"lastName": "Ivanov",
+    "isAdmin": true
+}
+
+###- completed task
+
+###
+POST http://127.0.0.1:7777/api/v1/completed-task
+Authorization: Bearer Ht1M8Yq1+x7J4/2t1GdWFOWWXvw=
+Content-Type: application/json
+
+{
+	"studentId": 3,
+	"taskId": 1
+}
+
+###
+GET http://127.0.0.1:7777/api/v1/completed-task?page=1&perPage=10&courseId=4&studentId=25
+Authorization: Bearer tEY4wiWQ9wIo4bcTuvtty/tj5fM=
+Content-Type: application/json
+
+###- course
+
+###
+POST http://127.0.0.1:7777/api/v1/course
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MTkyNDEyNDksImV4cCI6MTcxOTI0NDg0OSwibG9naW4iOiJpLnBldHJvdiIsInJvbGVzIjpbIlJPTEVfVEVBQ0hFUiJdfQ.evL-SmTiG938h6TWMh7skERnue8ARWBIme-xbMEJiZcicemQI6Xg03TU_j-LDFJTuGi-JKszcaNhwyMZkZIBytJeDqBXquAPZVSB35pkt01oUD_R66RSb75wKRGCCXgGgU4Oqiu9C6cBBMLLJ63-nkSCiN-zOz1NEbwHuO0x6_wxs5gy55rMYKbnhXaXxf8_oPs2BMP1-WJM30AOoIbrt4H3qDHIJ7tFE8Nwv0atw3P0lXiTuL7FyMpxN03JmK4KA1Irt8nCAZ_DiwnyIS31LgUrG8rvqqQYuBHFUUgXSCHWSGuRrzLn3cHZ_8gCZXMXa1MAtzUE70AtHucFu8GtpZDAQUYfuBssm1BuK_8cxDSjGcmvGcYA4TCjLEU3tZisYOY693MxK7bVmaeAeXATmTXIuNCKYFzbMZzKHJR22GjbEiWyjQH29H26UpvPYdWV4-EbGbZk5FXELuRcBgPZiUY-rR458v4TpY8xAAgfCSZb1FiWhxhdDjnGEvqX6O7r8HyRQdjM09IJbtJv-DPCo8Z5kt309oKxpyqbc5HUaeniMb-DlmSpJ8M8eQktzA3rpAo5RG2sXhni2BRW1yAKkVWhu9lb58zec8yjr49r9pZoOI4T-YO2MbtunVlZnVd2mozA8npanF3i-M35Jy6SL-U3fGcVsL_08BNF79RpYrs
+Content-Type: application/json
+
+{
+	"name": "Symfony Framework222"
+}

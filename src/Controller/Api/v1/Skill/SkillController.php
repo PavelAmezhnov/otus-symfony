@@ -10,6 +10,7 @@ use App\Entity\Skill;
 use App\Exception\BadRequestException;
 use App\Exception\EntityNotFoundException;
 use App\Manager\SkillManager;
+use App\Manager\StaffManager;
 use App\Repository\SkillRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
@@ -33,6 +34,7 @@ class SkillController extends AbstractController
     #[Route(path: '', methods: ['POST'])]
     public function create(#[MapRequestPayload] CreateData $dto): Skill
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_STAFF);
         return $this->skillManager->create($dto);
     }
 
@@ -42,6 +44,7 @@ class SkillController extends AbstractController
     #[Route(path: '', methods: ['PATCH'])]
     public function update(#[MapRequestPayload] UpdateData $dto): Skill
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_STAFF);
         return $this->skillManager->update($dto);
     }
 
@@ -51,6 +54,7 @@ class SkillController extends AbstractController
     #[Route(path: '/{id}', requirements: ['id' => '\d+'], methods: ['DELETE'])]
     public function delete(int $id)
     {
+        $this->denyAccessUnlessGranted(StaffManager::ROLE_ADMIN);
         return $this->skillManager->delete($id);
     }
 

@@ -12,3 +12,6 @@ php-bash:
 
 postgres-bash:
 	docker-compose exec postgres bash
+
+supervisor-bash:
+	docker-compose exec supervisor bash

@@ -15,7 +15,10 @@ use App\Form\Type\CompletedTask\UpdateType;
 use App\Manager\CompletedTaskManager;
 use App\Manager\StaffManager;
 use App\Repository\CompletedTaskRepository;
+use App\Service\AsyncService;
 use App\Service\CompletedTaskService;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -25,6 +28,7 @@ use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Throwable;
 
 #[Route(path: '/api/v1/completed-task')]
@@ -35,7 +39,7 @@ class CompletedTaskController extends AbstractController
         private readonly CompletedTaskService $completedTaskService,
         private readonly CompletedTaskManager $completedTaskManager,
         private readonly FormFactoryInterface $formFactory,
-        private readonly CompletedTaskRepository $completedTaskRepository
+        private readonly CompletedTaskRepository $completedTaskRepository,
     ) {
     }
 
@@ -74,9 +78,10 @@ class CompletedTaskController extends AbstractController
     /**
      * @throws EntityNotFoundException
      * @throws AccessDeniedException
+     * @throws InvalidArgumentException
      */
     #[Route(path: '', methods: ['PATCH'])]
-    public function update(#[MapRequestPayload] UpdateData $dto, UserInterface $user): CompletedTask
+    public function update(#[MapRequestPayload] UpdateData $dto, UserInterface $user): ?CompletedTask
     {
         return $this->completedTaskService->update($dto, $user);
     }
@@ -119,19 +124,23 @@ class CompletedTaskController extends AbstractController
     }
 
     /**
-     * @throws EntityNotFoundException
-     * @throws BadRequestException
      * @throws AccessDeniedException
+     * @throws BadRequestException
+     * @throws EntityNotFoundException
+     * @throws InvalidArgumentException
+     * @throws CacheException
      */
     #[Route(path: '', methods: ['GET'])]
-    public function read(#[MapQueryString] ReadData $dto, UserInterface $user): int|float|EntityCollection
+    public function read(#[MapQueryString] ReadData $dto, UserInterface $user): null|int|float|array
     {
         return $this->completedTaskService->read($dto, $user);
     }
 
     /**
-     * @throws EntityNotFoundException
      * @throws AccessDeniedException
+     * @throws CacheException
+     * @throws EntityNotFoundException
+     * @throws InvalidArgumentException
      */
     #[Route(path: '/{id}', name: 'view', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function readById(int $id, UserInterface $user): array

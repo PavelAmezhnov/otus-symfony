@@ -1,0 +1,50 @@
+old_sound_rabbit_mq:
+    connections:
+        default:
+            url: '%env(RABBITMQ_URL)%'
+
+    producers:
+        update_completed_task:
+            connection: default
+            exchange_options: {name: 'old_sound_rabbit_mq.update_completed_task', type: direct}
+        invalidate_cache:
+            connection: default
+            exchange_options: { name: 'old_sound_rabbit_mq.invalidate_cache', type: direct }
+        read_completed_tasks:
+            connection: default
+            exchange_options: { name: 'old_sound_rabbit_mq.read_completed_tasks', type: direct }
+
+    consumers:
+        update_completed_task:
+            connection: default
+            exchange_options: {name: 'old_sound_rabbit_mq.update_completed_task', type: direct}
+            queue_options: {name: 'old_sound_rabbit_mq.consumer.update_completed_task'}
+            callback: App\Consumer\CompletedTask\Update\Consumer
+            idle_timeout: 300
+            idle_timeout_exit_code: 0
+            graceful_max_execution:
+                timeout: 1800
+                exit_code: 0
+            qos_options: {prefetch_size: 0, prefetch_count: 1, global: false}
+        invalidate_cache:
+            connection: default
+            exchange_options: { name: 'old_sound_rabbit_mq.invalidate_cache', type: direct }
+            queue_options: { name: 'old_sound_rabbit_mq.consumer.invalidate_cache' }
+            callback: App\Consumer\Common\Invalidate\Consumer
+            idle_timeout: 300
+            idle_timeout_exit_code: 0
+            graceful_max_execution:
+                timeout: 1800
+                exit_code: 0
+            qos_options: { prefetch_size: 0, prefetch_count: 1, global: false }
+        read_completed_tasks:
+            connection: default
+            exchange_options: { name: 'old_sound_rabbit_mq.read_completed_tasks', type: direct }
+            queue_options: { name: 'old_sound_rabbit_mq.consumer.read_completed_tasks' }
+            callback: App\Consumer\CompletedTask\Read\Consumer
+            idle_timeout: 300
+            idle_timeout_exit_code: 0
+            graceful_max_execution:
+                timeout: 1800
+                exit_code: 0
+            qos_options: { prefetch_size: 0, prefetch_count: 1, global: false }

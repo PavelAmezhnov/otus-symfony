@@ -38,3 +38,25 @@ services:
     App\Service\AuthService:
         arguments:
             $tokenTTL: '%env(JWT_TTL_SEC)%'
+
+    redis_client:
+        class: Redis
+        factory: Symfony\Component\Cache\Adapter\RedisAdapter::createConnection
+        arguments:
+            - '%env(REDIS_DSN)%'
+
+    redis_adapter:
+        class: Symfony\Component\Cache\Adapter\RedisTagAwareAdapter
+        arguments:
+            - '@redis_client'
+            - 'my_app'
+
+    App\Service\CompletedTaskService:
+        arguments:
+            $cache: '@redis_adapter'
+
+    App\Service\AsyncService:
+        calls:
+            - [ 'registerProducer', [ !php/const App\Service\AsyncService::UPDATE_COMPLETED_TASK, '@old_sound_rabbit_mq.update_completed_task_producer' ] ]
+            - [ 'registerProducer', [ !php/const App\Service\AsyncService::INVALIDATE_CACHE, '@old_sound_rabbit_mq.invalidate_cache_producer' ] ]
+            - [ 'registerProducer', [ !php/const App\Service\AsyncService::READ_COMPLETED_TASKS, '@old_sound_rabbit_mq.read_completed_tasks_producer' ] ]

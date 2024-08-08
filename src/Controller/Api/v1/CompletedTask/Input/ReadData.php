@@ -13,7 +13,7 @@ class ReadData
         #[Assert\Range(min: 1, max: 1000)]
         public readonly int $perPage = 100,
         #[Assert\GreaterThanOrEqual(1)]
-        public readonly ?int $studentId = null,
+        public ?int $studentId = null,
         #[Assert\GreaterThanOrEqual(1)]
         public readonly ?int $taskId = null,
         #[Assert\GreaterThanOrEqual(1)]

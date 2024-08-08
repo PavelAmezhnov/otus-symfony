@@ -22,17 +22,23 @@ use App\Manager\CompletedTaskManager;
 use App\Manager\StaffManager;
 use App\Manager\StudentManager;
 use App\Manager\TeacherManager;
+use DateTime;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
+use Symfony\Component\Cache\CacheItem;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class CompletedTaskService
 {
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly CompletedTaskManager $completedTaskManager
+        private readonly CompletedTaskManager $completedTaskManager,
+        private readonly TagAwareCacheInterface $cache,
+        private readonly AsyncService $asyncService
     ) {
 
     }
@@ -62,34 +68,49 @@ class CompletedTaskService
      * @throws EntityNotFoundException
      * @throws AccessDeniedException
      */
-    public function update(UpdateData $dto, UserInterface $user): CompletedTask
+    public function update(UpdateData $dto, UserInterface $user = null): ?CompletedTask
     {
         /** @var CompletedTask|null $completedTask */
-        $completedTask = $this->entityManager->getRepository(Student::class)->find($dto->id);
+        $completedTask = $this->entityManager->getRepository(CompletedTask::class)->find($dto->id);
         if ($completedTask === null) {
             throw new EntityNotFoundException('Completed task not found');
         }
 
-        $task = $completedTask->getTask();
-        $lesson = $task->getLesson();
-        $course = $lesson->getCourse();
+        if ($user instanceof UserInterface) {
+            $task = $completedTask->getTask();
+            $lesson = $task->getLesson();
+            $course = $lesson->getCourse();
 
-        /** @var CuratedCourse $curatedCourse */
-        foreach ($course->getCuratedCourses()->toArray() as $curatedCourse) {
-            if ($curatedCourse->getTeacher() === $user) {
-                return $this->completedTaskManager->update($dto);
+            /** @var CuratedCourse $curatedCourse */
+            foreach ($course->getCuratedCourses()->toArray() as $curatedCourse) {
+                if ($curatedCourse->getTeacher() === $user) {
+                    $this->asyncService->publishToExchange(
+                        AsyncService::UPDATE_COMPLETED_TASK,
+                        json_encode((array) $dto)
+                    );
+                    $this->asyncService->publishToExchange(
+                        AsyncService::INVALIDATE_CACHE,
+                        json_encode(['tags' => [(string) $completedTask->getStudent()->getId()]])
+                    );
+
+                    return null;
+                }
             }
+
+            throw new AccessDeniedException("You can't do this action");
         }
 
-        throw new AccessDeniedException("You can't do this action");
+        return $this->completedTaskManager->update($dto);
     }
 
     /**
      * @throws EntityNotFoundException
      * @throws BadRequestException
      * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws CacheException
      */
-    public function read(ReadData $dto, UserInterface $user): int|float|EntityCollection
+    public function read(ReadData $dto, UserInterface $user = null): null|int|float|array
     {
         if ($dto->lessonId !== null) {
             return $this->getTotalGradeForLesson($dto, $user);
@@ -107,7 +128,7 @@ class CompletedTaskService
             return $this->getTotalGradeInTimeRange($dto, $user);
         }
 
-        return $this->entityManager->getRepository(CompletedTask::class)->read($dto);
+        return $this->getCompletedTasks($dto, $user);
     }
 
     /**
@@ -116,8 +137,10 @@ class CompletedTaskService
      * @throws BadRequestException
      * @throws EntityNotFoundException
      * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws CacheException
      */
-    private function getTotalGradeForLesson(ReadData $dto, UserInterface $user): int
+    private function getTotalGradeForLesson(ReadData $dto, UserInterface $user = null): null|int
     {
         if ($dto->lessonId === null) {
             throw new BadRequestException('lessonId required');
@@ -138,28 +161,44 @@ class CompletedTaskService
             throw new EntityNotFoundException('Student not found');
         }
 
-        // вычисление по текущему пользователю, можно ли ему выполнить это действие
-        if ($user->hasRole(StudentManager::ROLE_STUDENT)) {
-            if ($student->getUser() !== $user) {
-                throw new AccessDeniedException("You can't do this action");
-            }
-        }
-
-        if ($user->hasRole(TeacherManager::ROLE_TEACHER)) {
-            $teacher = $this->entityManager->getRepository(Teacher::class)->findOneBy([['user' => $user]]);
-
-            $course = $lesson->getCourse();
-            $flag = true;
-            /** @var CuratedCourse $curatedCourse */
-            foreach ($course->getCuratedCourses()->toArray() as $curatedCourse) {
-                if ($curatedCourse->getTeacher() === $teacher) {
-                    $flag = false;
+        if ($user instanceof UserInterface) {
+            if ($user->hasRole(StudentManager::ROLE_STUDENT)) {
+                if ($student->getUser() !== $user) {
+                    throw new AccessDeniedException("You can't do this action");
                 }
             }
 
-            if ($flag) {
-                throw new AccessDeniedException("You can't do this action");
+            if ($user->hasRole(TeacherManager::ROLE_TEACHER)) {
+                $teacher = $this->entityManager->getRepository(Teacher::class)->findOneBy(['user' => $user->getId()]);
+
+                $course = $lesson->getCourse();
+                $flag = true;
+                /** @var CuratedCourse $curatedCourse */
+                foreach ($course->getCuratedCourses()->toArray() as $curatedCourse) {
+                    if ($curatedCourse->getTeacher() === $teacher) {
+                        $flag = false;
+                        break;
+                    }
+                }
+
+                if ($flag) {
+                    throw new AccessDeniedException("You can't do this action");
+                }
             }
+
+            /** @var CacheItem $cacheItem */
+            $cacheItem = $this->cache
+                ->getItem(sprintf('completed_task__total_grade_for_lesson__%s_%s', $dto->lessonId, $dto->studentId));
+            if ($cacheItem->isHit()) {
+                return $cacheItem->get();
+            }
+
+            $this->asyncService->publishToExchange(
+                AsyncService::READ_COMPLETED_TASKS,
+                json_encode((array) $dto)
+            );
+
+            return null;
         }
 
         $criteria = Criteria::create()
@@ -176,6 +215,13 @@ class CompletedTaskService
             $totalGrade += $completedTask->getGrade();
         }
 
+        /** @var CacheItem $cacheItem */
+        $cacheItem = $this->cache
+            ->getItem(sprintf('completed_task__total_grade_for_lesson__%s_%s', $dto->lessonId, $dto->studentId));
+        $cacheItem->set($totalGrade);
+        $cacheItem->tag((string) $dto->studentId);
+        $this->cache->save($cacheItem);
+
         return $totalGrade;
     }
 
@@ -185,13 +231,11 @@ class CompletedTaskService
      * @throws BadRequestException
      * @throws EntityNotFoundException
      * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws CacheException
      */
-    private function getTotalGradeForSkill(ReadData $dto, UserInterface $user): float
+    private function getTotalGradeForSkill(ReadData $dto, UserInterface $user = null): ?float
     {
-        if (array_intersect([StaffManager::ROLE_STAFF, StudentManager::ROLE_STUDENT], $user->getRoles())) {
-            throw new AccessDeniedException("You can't do this action");
-        }
-
         if ($dto->skillId === null) {
             throw new BadRequestException('skillId required');
         }
@@ -210,10 +254,30 @@ class CompletedTaskService
             throw new EntityNotFoundException('Student not found');
         }
 
-        if ($user->hasRole(StudentManager::ROLE_STUDENT)) {
-            if ($student->getUser() !== $user) {
+        if ($user instanceof UserInterface) {
+            if (array_intersect([StaffManager::ROLE_STAFF, StudentManager::ROLE_STUDENT], $user->getRoles())) {
                 throw new AccessDeniedException("You can't do this action");
             }
+
+            if ($user->hasRole(StudentManager::ROLE_STUDENT)) {
+                if ($student->getUser() !== $user) {
+                    throw new AccessDeniedException("You can't do this action");
+                }
+            }
+
+            /** @var CacheItem $cacheItem */
+            $cacheItem = $this->cache
+                ->getItem(sprintf('completed_task__total_grade_for_skill__%s_%s', $dto->skillId, $dto->studentId));
+            if ($cacheItem->isHit()) {
+                return $cacheItem->get();
+            }
+
+            $this->asyncService->publishToExchange(
+                AsyncService::READ_COMPLETED_TASKS,
+                json_encode((array) $dto)
+            );
+
+            return null;
         }
 
         $completedTasks = $this->entityManager->getRepository(CompletedTask::class)->findBy(['student' => $student]);
@@ -229,17 +293,26 @@ class CompletedTaskService
             }
         }
 
+        /** @var CacheItem $cacheItem */
+        $cacheItem = $this->cache
+            ->getItem(sprintf('completed_task__total_grade_for_skill__%s_%s', $dto->skillId, $dto->studentId));
+        $cacheItem->set($totalGrade);
+        $cacheItem->tag((string) $dto->studentId);
+        $this->cache->save($cacheItem);
+
         return $totalGrade;
     }
 
     /**
-     * Возвращает полученный студентом суммарный балл по всем пополненным заданиям указанного курса
+     * Возвращает полученный студентом суммарный балл по всем выполненным заданиям указанного курса
      *
      * @throws BadRequestException
      * @throws EntityNotFoundException
      * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws CacheException
      */
-    private function getTotalGradeForCourse(ReadData $dto, UserInterface $user): int
+    private function getTotalGradeForCourse(ReadData $dto, UserInterface $user = null): ?int
     {
         if ($dto->courseId === null) {
             throw new BadRequestException('courseId required');
@@ -259,26 +332,43 @@ class CompletedTaskService
             throw new EntityNotFoundException('Student not found');
         }
 
-        if ($user->hasRole(StudentManager::ROLE_STUDENT)) {
-            if ($student->getUser() !== $user) {
-                throw new AccessDeniedException("You can't do this action");
-            }
-        }
-
-        if ($user->hasRole(TeacherManager::ROLE_TEACHER)) {
-            $teacher = $this->entityManager->getRepository(Teacher::class)->findOneBy(['user' => $user]);
-
-            $flag = true;
-            /** @var CuratedCourse $curatedCourse */
-            foreach ($course->getCuratedCourses()->toArray() as $curatedCourse) {
-                if ($curatedCourse->getTeacher() === $teacher) {
-                    $flag = false;
+        if ($user instanceof UserInterface) {
+            if ($user->hasRole(StudentManager::ROLE_STUDENT)) {
+                if ($student->getUser() !== $user) {
+                    throw new AccessDeniedException("You can't do this action");
                 }
             }
 
-            if ($flag) {
-                throw new AccessDeniedException("You can't do this action");
+            if ($user->hasRole(TeacherManager::ROLE_TEACHER)) {
+                $teacher = $this->entityManager->getRepository(Teacher::class)->findOneBy(['user' => $user->getId()]);
+
+                $flag = true;
+                /** @var CuratedCourse $curatedCourse */
+                foreach ($course->getCuratedCourses()->toArray() as $curatedCourse) {
+                    if ($curatedCourse->getTeacher() === $teacher) {
+                        $flag = false;
+                        break;
+                    }
+                }
+
+                if ($flag) {
+                    throw new AccessDeniedException("You can't do this action");
+                }
             }
+
+            /** @var CacheItem $cacheItem */
+            $cacheItem = $this->cache
+                ->getItem(sprintf('completed_task__total_grade_for_course__%s_%s', $dto->courseId, $dto->studentId));
+            if ($cacheItem->isHit()) {
+                return $cacheItem->get();
+            }
+
+            $this->asyncService->publishToExchange(
+                AsyncService::READ_COMPLETED_TASKS,
+                json_encode((array) $dto)
+            );
+
+            return null;
         }
 
         $completedTasks = $this->entityManager->getRepository(CompletedTask::class)->findBy(['student' => $student]);
@@ -291,22 +381,27 @@ class CompletedTaskService
             }
         }
 
+        /** @var CacheItem $cacheItem */
+        $cacheItem = $this->cache
+            ->getItem(sprintf('completed_task__total_grade_for_course__%s_%s', $dto->courseId, $dto->studentId));
+        $cacheItem->set($totalGrade);
+        $cacheItem->tag((string) $dto->studentId);
+        $this->cache->save($cacheItem);
+
         return $totalGrade;
     }
 
     /**
      * Возвращает полученный студентом суммарный балл по всем пополненным заданиям за указанный интервал времени
      *
+     * @throws AccessDeniedException
      * @throws BadRequestException
+     * @throws CacheException
      * @throws EntityNotFoundException
-     * @throws Exception
+     * @throws InvalidArgumentException
      */
-    private function getTotalGradeInTimeRange(ReadData $dto, UserInterface $user): int
+    private function getTotalGradeInTimeRange(ReadData $dto, UserInterface $user = null): ?int
     {
-        if (array_intersect([StaffManager::ROLE_STAFF, StudentManager::ROLE_STUDENT], $user->getRoles())) {
-            throw new AccessDeniedException("You can't do this action");
-        }
-
         if ($dto->finishedAtGTE === null) {
             throw new BadRequestException('finishedAtGTE required');
         }
@@ -320,10 +415,34 @@ class CompletedTaskService
             throw new EntityNotFoundException('Student not found');
         }
 
-        if ($user->hasRole(StudentManager::ROLE_STUDENT)) {
-            if ($student->getUser() !== $user) {
+        if ($user instanceof UserInterface) {
+            if (array_intersect([StaffManager::ROLE_STAFF, StudentManager::ROLE_STUDENT], $user->getRoles())) {
                 throw new AccessDeniedException("You can't do this action");
             }
+
+            if ($user->hasRole(StudentManager::ROLE_STUDENT)) {
+                if ($student->getUser() !== $user) {
+                    throw new AccessDeniedException("You can't do this action");
+                }
+            }
+
+            /** @var CacheItem $cacheItem */
+            $cacheItem = $this->cache->getItem(sprintf(
+                'completed_task__total_grade_in_time_range__%s_%s_%s',
+                $dto->finishedAtGTE,
+                $dto->finishedAtLTE,
+                $dto->studentId
+            ));
+            if ($cacheItem->isHit()) {
+                return $cacheItem->get();
+            }
+
+            $this->asyncService->publishToExchange(
+                AsyncService::READ_COMPLETED_TASKS,
+                json_encode((array) $dto)
+            );
+
+            return null;
         }
 
         $criteria = Criteria::create()
@@ -338,16 +457,36 @@ class CompletedTaskService
             $totalGrade += $completedTask->getGrade();
         }
 
+        /** @var CacheItem $cacheItem */
+        $cacheItem = $this->cache->getItem(sprintf(
+            'completed_task__total_grade_in_time_range__%s_%s_%s',
+            $dto->finishedAtGTE,
+            $dto->finishedAtLTE,
+            $dto->studentId
+        ));
+        $cacheItem->set($totalGrade);
+        $cacheItem->tag((string) $dto->studentId);
+        $this->cache->save($cacheItem);
+
         return $totalGrade;
     }
 
     /**
-     * @throws EntityNotFoundException
      * @throws AccessDeniedException
+     * @throws CacheException
+     * @throws EntityNotFoundException
+     * @throws InvalidArgumentException
      */
     public function readById(int $id, UserInterface $user): array
     {
-        $completedTask = $this->entityManager->getRepository(CompletedTask::class)->find($id);
+        /** @var CacheItem $cacheItem */
+        $cacheItem = $this->cache->getItem(sprintf('completed_task__%s', $id));
+        if ($cacheItem->isHit()) {
+            $completedTask = $cacheItem->get();
+        } else {
+            $completedTask = $this->entityManager->getRepository(CompletedTask::class)->find($id);
+        }
+
         if ($completedTask === null) {
             throw new EntityNotFoundException('Completed task not found');
         }
@@ -360,7 +499,7 @@ class CompletedTaskService
         }
 
         if ($user->hasRole(TeacherManager::ROLE_TEACHER)) {
-            $teacher = $this->entityManager->getRepository(Teacher::class)->findOneBy([['user' => $user]]);
+            $teacher = $this->entityManager->getRepository(Teacher::class)->findOneBy(['user' => $user->getId()]);
 
             $task = $completedTask->getTask();
             $lesson = $task->getLesson();
@@ -379,6 +518,43 @@ class CompletedTaskService
             }
         }
 
-        return $completedTask->toArray();
+        $result = $completedTask->toArray();
+        $cacheItem->set($result);
+        $cacheItem->tag((string) $student->getId());
+        $this->cache->save($cacheItem);
+
+        return $result;
+    }
+
+    /**
+     * @throws AccessDeniedException
+     */
+    private function getCompletedTasks(ReadData $dto, UserInterface $user): array
+    {
+        if (array_intersect([StaffManager::ROLE_STAFF, StudentManager::ROLE_STUDENT], $user->getRoles())) {
+            throw new AccessDeniedException("You can't do this action");
+        }
+
+        if ($user->hasRole(StudentManager::ROLE_STUDENT)) {
+            /** @var Student $student */
+            $student = $this->entityManager->getRepository(Student::class)->findOneBy([['user' => $user]]);
+            $dto->studentId = $student->getId();
+        }
+
+        /** @var CacheItem $cacheItem */
+        $cacheItem = $this->cache->getItem(sprintf('completed_task__%s', md5(json_encode((array) $dto))));
+        if ($cacheItem->isHit()) {
+            return $cacheItem->get();
+        }
+
+        $result = array_map(
+            static fn(CompletedTask $ct) => $ct->toArray(),
+            $this->entityManager->getRepository(CompletedTask::class)->read($dto)->toArray()
+        );
+        $cacheItem->set($result);
+        $cacheItem->expiresAt((new DateTime('now'))->modify('+1 hour'));
+        $this->cache->save($cacheItem);
+
+        return $result;
     }
 }
